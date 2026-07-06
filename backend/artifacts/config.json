@@ -1,0 +1,108 @@
+{
+  "cat_features": [
+    "Age Group",
+    "Gender",
+    "Race",
+    "Ethnicity",
+    "Type of Admission",
+    "APR Severity of Illness Description",
+    "APR Risk of Mortality",
+    "APR MDC Description",
+    "APR DRG Description",
+    "Payment Typology 1",
+    "Emergency Department Indicator",
+    "Facility Name"
+  ],
+  "ui_features": [
+    "Age Group",
+    "Type of Admission",
+    "APR Severity of Illness Description",
+    "APR DRG Description",
+    "Payment Typology 1"
+  ],
+  "ui_options": {
+    "Age Group": [
+      "70 or Older",
+      "50-69",
+      "30-49",
+      "0-17",
+      "18-29"
+    ],
+    "Type of Admission": [
+      "Emergency",
+      "Elective",
+      "Urgent",
+      "Newborn",
+      "Not Available",
+      "Trauma"
+    ],
+    "APR Severity of Illness Description": [
+      "Minor",
+      "Moderate",
+      "Major",
+      "Extreme"
+    ],
+    "APR DRG Description": [
+      "NEONATE BIRTH WEIGHT > 2499 GRAMS, NORMAL NEWBORN OR NEONATE WITH OTHER PROBLEM",
+      "SEPTICEMIA AND DISSEMINATED INFECTIONS",
+      "Other",
+      "VAGINAL DELIVERY",
+      "HEART FAILURE",
+      "CESAREAN SECTION WITHOUT STERILIZATION",
+      "MAJOR RESPIRATORY INFECTIONS AND INFLAMMATIONS",
+      "OTHER PNEUMONIA",
+      "ACUTE KIDNEY INJURY",
+      "KIDNEY AND URINARY TRACT INFECTIONS",
+      "CVA AND PRECEREBRAL OCCLUSION WITH INFARCTION",
+      "RESPIRATORY FAILURE",
+      "CELLULITIS AND OTHER SKIN INFECTIONS",
+      "CHRONIC OBSTRUCTIVE PULMONARY DISEASE",
+      "CARDIAC ARRHYTHMIA AND CONDUCTION DISORDERS",
+      "DIABETES",
+      "MAJOR DEPRESSIVE DISORDERS AND OTHER OR UNSPECIFIED PSYCHOSES",
+      "OTHER DIGESTIVE SYSTEM DIAGNOSES",
+      "ALTERATION IN CONSCIOUSNESS",
+      "SCHIZOPHRENIA",
+      "MALFUNCTION, REACTION, COMPLICATION OF GENITOURINARY DEVICE OR PROCEDURE",
+      "OTHER GASTROENTERITIS, NAUSEA AND VOMITING",
+      "SEIZURE",
+      "CARDIAC CATHETERIZATION FOR OTHER NON-CORONARY CONDITIONS",
+      "INFECTIOUS AND PARASITIC DISEASES INCLUDING HIV WITH O.R. PROCEDURE"
+    ],
+    "Payment Typology 1": [
+      "Medicare",
+      "Medicaid",
+      "Blue Cross/Blue Shield",
+      "Private Health Insurance",
+      "Federal/State/Local/VA",
+      "Self-Pay",
+      "Miscellaneous/Other",
+      "Department of Corrections"
+    ]
+  },
+  "facilities": [
+    "STRONG MEMORIAL HOSPITAL",
+    "ROCHESTER GENERAL HOSPITAL",
+    "THE UNITY HOSPITAL OF ROCHESTER",
+    "HIGHLAND HOSPITAL",
+    "ARNOT OGDEN MEDICAL CENTER",
+    "F.F. THOMPSON HOSPITAL",
+    "NEWARK-WAYNE COMMUNITY HOSPITAL",
+    "CORNING HOSPITAL"
+  ],
+  "baseline": {
+    "Age Group": "70 or Older",
+    "Gender": "F",
+    "Race": "White",
+    "Ethnicity": "Not Span/Hispanic",
+    "Type of Admission": "Emergency",
+    "APR Severity of Illness Description": "Moderate",
+    "APR Risk of Mortality": "Minor",
+    "APR MDC Description": "DISEASES AND DISORDERS OF THE CIRCULATORY SYSTEM",
+    "APR DRG Description": "NEONATE BIRTH WEIGHT > 2499 GRAMS, NORMAL NEWBORN OR NEONATE WITH OTHER PROBLEM",
+    "Payment Typology 1": "Medicare",
+    "Emergency Department Indicator": "Y",
+    "Facility Name": "STRONG MEMORIAL HOSPITAL"
+  },
+  "high_cost_default": 40000
+}
