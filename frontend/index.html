@@ -180,6 +180,8 @@
       <span class="badge"><span class="dot"></span>Live model · real SPARCS data</span>
     </header>
 
+    <div class="method-note" id="staticNotice" hidden><b>Public static edition:</b> Facility benchmarking, ranked opportunities, robustness analysis, and historical examples are fully available. The experimental live prediction sandbox requires the FastAPI backend and is intentionally omitted here.</div>
+
     <div class="section-title">
       <div><h2>Case-mix opportunity overview</h2><p>Observed utilization compared with separate out-of-fold expectations within newborn, maternity, pediatric, emergency-medical, elective-surgical, and other service lines. Positive gaps are investigation signals—not proven waste or guaranteed savings.</p></div>
       <div class="fltr"><label>Facility view</label><select id="oFacility"><option value="">All facilities</option></select></div>
@@ -216,6 +218,7 @@
       <div class="method-note"><b>Cluster audit:</b> Unsupervised clinical clustering found only a weak two-group separation (silhouette 0.194), largely emergency medical versus maternity/newborn/elective care. The tool therefore uses transparent service lines instead of opaque cluster labels.</div>
     </div>
 
+    <div id="predictionMode">
     <div class="section-title"><div><h2>Experimental prediction sandbox</h2><p>Individual estimates are retained for model exploration. They should not be used alone for clinical, discharge, billing, or resource-allocation decisions.</p></div></div>
 
     <div class="filters glass">
@@ -295,6 +298,7 @@
         <div class="how-item"><div class="n">04</div><div class="t">Driver attribution</div><div class="d">Per-admission cost drivers via feature ablation — the "why" behind each estimate.</div></div>
       </div>
     </div>
+    </div>
 
     <footer id="foot">
       Live model — HistGradientBoosting regressors trained on NY SPARCS 2024 (Finger Lakes). Predictions computed server-side via FastAPI.<br>
@@ -304,7 +308,8 @@
 
 <script>
 (function(){
-  const API = "";  // same origin
+  const STATIC_MODE=location.hostname.endsWith('github.io')||new URLSearchParams(location.search).has('static');
+  const API = "";  // same origin for the FastAPI edition
   const $=id=>document.getElementById(id);
   const fmt=n=>'$'+Math.round(n).toLocaleString();
   const RAMP={Minor:'var(--s-minor)',Moderate:'var(--s-moderate)',Major:'var(--s-major)',Extreme:'var(--s-extreme)'};
@@ -316,8 +321,10 @@
 
   async function init(){
     try{
-      CFG=await (await fetch(API+'/api/config')).json();
-      MET=await (await fetch(API+'/api/metrics')).json();
+      const configUrl=STATIC_MODE?'./data/config.json':API+'/api/config';
+      const metricsUrl=STATIC_MODE?'./data/metrics.json':API+'/api/metrics';
+      CFG=await (await fetch(configUrl)).json();
+      MET=await (await fetch(metricsUrl)).json();
     }catch(e){ $('metaRow').innerHTML='<span class="loading" style="color:var(--s-extreme)">Could not reach API. Start the backend (uvicorn app:app).</span>'; return; }
 
     // meta row
@@ -333,6 +340,13 @@
       renderBenchmarkValidation();
     }else{
       $('oppMethod').textContent='Retrain the project to generate the opportunity-analysis artifact.';
+    }
+
+    if(STATIC_MODE){
+      $('staticNotice').hidden=false;
+      $('predictionMode').hidden=true;
+      $('foot').innerHTML='Static opportunity-analysis edition · Generated from NY SPARCS 2024 (Finger Lakes) artifacts.<br>Source: NY State Dept. of Health SPARCS · Built by Rajashekar (Ak) Akula';
+      return;
     }
 
     // filters
