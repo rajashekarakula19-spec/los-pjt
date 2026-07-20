@@ -1,15 +1,58 @@
+<div align="center">
+
 # Finger Lakes Inpatient Opportunity Analyzer
 
-A full-stack hospital operations analytics prototype built from the **2024 New
-York SPARCS de-identified inpatient public-use file**. It compares observed
-length of stay (LOS) and total cost with case-mix-adjusted expectations, then
-ranks statistically supported facility and service-line areas for investigation.
+### Case-mix-adjusted LOS and cost intelligence for hospital operations
 
-> **Important:** This is a retrospective analytical and portfolio prototype—not
-> a clinical decision system. A positive gap is not proof of waste, poor care,
-> causation, or realizable savings. The experimental patient-level estimates must
-> not independently drive clinical, discharge, billing, staffing, or resource
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.139-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.8-F7931E?logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
+[![Tests](https://img.shields.io/badge/tests-4%20passing-2EA44F?logo=githubactions&logoColor=white)](#tests)
+[![Data](https://img.shields.io/badge/data-NY%20SPARCS%202024-6F42C1)](#data-source)
+[![Status](https://img.shields.io/badge/status-research%20prototype-1F6FEB)](#known-limitations)
+
+A full-stack hospital operations analytics prototype built from the **2024 New
+York SPARCS de-identified inpatient public-use file**. It compares observed LOS
+and total cost with case-mix-adjusted expectations, then ranks statistically
+supported facility and service-line areas for human investigation.
+
+[Quick start](#quick-start) · [Method](#analytical-approach) · [Results](#dataset-and-current-results) · [API](#api) · [Limitations](#known-limitations)
+
+</div>
+
+> [!IMPORTANT]
+> This is a retrospective analytical and portfolio prototype—not a clinical
+> decision system. A positive gap is not proof of waste, poor care, causation,
+> or realizable savings. Experimental patient-level estimates must not
+> independently drive clinical, discharge, billing, staffing, or resource
 > decisions.
+
+## At a glance
+
+<table>
+  <tr>
+    <td align="center"><strong>139,690</strong><br><sub>clean discharges</sub></td>
+    <td align="center"><strong>17</strong><br><sub>facilities</sub></td>
+    <td align="center"><strong>7</strong><br><sub>service lines</sub></td>
+    <td align="center"><strong>40</strong><br><sub>FDR-supported signals</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>3-fold</strong><br><sub>out-of-fold design</sub></td>
+    <td align="center"><strong>95%</strong><br><sub>uncertainty intervals</sub></td>
+    <td align="center"><strong>q ≤ 0.05</strong><br><sub>FDR threshold</sub></td>
+    <td align="center"><strong>100+</strong><br><sub>minimum group size</sub></td>
+  </tr>
+</table>
+
+<details>
+<summary><strong>What makes the analysis different?</strong></summary>
+
+The project combines service-line-specific out-of-fold case-mix benchmarking,
+false-discovery-rate control, trimmed robust gaps, and top-10% residual
+concentration. It is designed to reduce attractive but misleading hospital
+“savings opportunity” claims.
+
+</details>
 
 ## Why this project exists
 
@@ -24,6 +67,11 @@ first estimates the expected utilization for clinically similar cases, then asks
 - Does it survive correction for testing many groups?
 
 The result is an **investigation priority**, not an automated judgment.
+
+> [!TIP]
+> Start with a broad-based, high-volume service-line signal. Then use the DRG
+> drill-down and historical examples to form questions for clinical, finance,
+> and operations teams.
 
 ## Dashboard capabilities
 
@@ -42,32 +90,28 @@ The result is an **investigation priority**, not an automated judgment.
 
 ## Analytical approach
 
-```text
-2024 SPARCS Finger Lakes discharges
-                  │
-                  ▼
-       Validation and cleaning
-                  │
-                  ▼
-       Outcome-free feature layer
-                  │
-                  ▼
- Seven interpretable service-line cohorts
-                  │
-                  ▼
-  3-fold out-of-fold LOS and cost models
-                  │
-                  ▼
- Globally calibrated expected utilization
-                  │
-                  ▼
- Facility × service-line / DRG aggregation
-                  │
-                  ▼
- Volume + uncertainty + FDR + robust checks
-                  │
-                  ▼
-        Ranked investigation signals
+```mermaid
+flowchart TD
+    A[2024 SPARCS<br/>Finger Lakes discharges] --> B[Validate and clean]
+    B --> C[Outcome-free<br/>feature layer]
+    C --> D[7 interpretable<br/>service-line cohorts]
+    D --> E[3-fold out-of-fold<br/>LOS and cost models]
+    E --> F[Calibrated expected<br/>utilization]
+    F --> G[Facility × service line<br/>and Facility × DRG]
+    G --> H{Statistical safeguards}
+    H -->|Volume ≥ 100| I[95% uncertainty]
+    I --> J[FDR q ≤ 0.05]
+    J --> K[Robust and concentration checks]
+    K --> L[Ranked investigation signals]
+
+    classDef source fill:#172554,stroke:#60A5FA,color:#EFF6FF,stroke-width:2px;
+    classDef process fill:#0F3D3E,stroke:#5EEAD4,color:#F0FDFA,stroke-width:2px;
+    classDef guard fill:#4A2C0A,stroke:#FBBF24,color:#FFFBEB,stroke-width:2px;
+    classDef result fill:#3B164D,stroke:#D8B4FE,color:#FAF5FF,stroke-width:2px;
+    class A source;
+    class B,C,D,E,F,G process;
+    class H,I,J,K guard;
+    class L result;
 ```
 
 ### Service-line cohorts
@@ -128,6 +172,12 @@ top-10% concentration measure then classifies the result as:
 - **Broad-based:** distributed across many cases
 - **Mixed:** both general variation and extreme cases contribute
 - **Outlier-concentrated:** a relatively small number of cases dominate
+
+| Dashboard label | Visual meaning | Recommended first action |
+|---|---|---|
+| 🟢 **Broad-based** | Difference is distributed across many cases | Review the common workflow |
+| 🟡 **Mixed** | General variation and extreme cases both matter | Split routine and complex cases |
+| 🔴 **Outlier-concentrated** | A small case group dominates | Begin with complex-case review |
 
 ## Dataset and current results
 
@@ -305,6 +355,9 @@ Open <http://127.0.0.1:7860>.
 
 ## Interpretation guidance
 
+<details open>
+<summary><strong>Example: interpreting a ranked result correctly</strong></summary>
+
 Suppose a facility/DRG group shows:
 
 ```text
@@ -325,6 +378,8 @@ Correct interpretation:
 Incorrect interpretation:
 
 > The hospital wasted $14.1 million and can automatically save it.
+
+</details>
 
 ## Known limitations
 
