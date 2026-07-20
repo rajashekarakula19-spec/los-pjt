@@ -180,7 +180,7 @@
       <span class="badge"><span class="dot"></span>Live model · real SPARCS data</span>
     </header>
 
-    <div class="method-note" id="staticNotice" hidden><b>Public static edition:</b> Facility benchmarking, ranked opportunities, robustness analysis, and historical examples are fully available. The experimental live prediction sandbox requires the FastAPI backend and is intentionally omitted here.</div>
+    <div class="method-note" id="staticNotice" hidden><b>Public static edition:</b> Facility benchmarking, ranked opportunities, robustness analysis, and historical examples use saved analysis artifacts. The prediction section below is a read-only demonstration; live calculations require the FastAPI backend.</div>
 
     <div class="section-title">
       <div><h2>Case-mix opportunity overview</h2><p>Observed utilization compared with separate out-of-fold expectations within newborn, maternity, pediatric, emergency-medical, elective-surgical, and other service lines. Positive gaps are investigation signals—not proven waste or guaranteed savings.</p></div>
@@ -219,7 +219,8 @@
     </div>
 
     <div id="predictionMode">
-    <div class="section-title"><div><h2>Experimental prediction sandbox</h2><p>Individual estimates are retained for model exploration. They should not be used alone for clinical, discharge, billing, or resource-allocation decisions.</p></div></div>
+    <div class="section-title"><div><h2 id="predictionTitle">Experimental prediction sandbox</h2><p>Individual estimates are retained for model exploration. They should not be used alone for clinical, discharge, billing, or resource-allocation decisions.</p></div></div>
+    <div class="method-note" id="predictionDemoNotice" hidden><b>Illustrative example—not a live prediction:</b> Inputs are locked and outputs demonstrate the interface only. Performance charts and aggregate statistics below still come from held-out SPARCS records.</div>
 
     <div class="filters glass">
       <div class="fltr locked"><label>Health Service Area</label><select disabled><option>Finger Lakes</option></select></div>
@@ -344,9 +345,9 @@
 
     if(STATIC_MODE){
       $('staticNotice').hidden=false;
-      $('predictionMode').hidden=true;
+      $('predictionTitle').textContent='Prediction model demonstration';
+      $('predictionDemoNotice').hidden=false;
       $('foot').innerHTML='Static opportunity-analysis edition · Generated from NY SPARCS 2024 (Finger Lakes) artifacts.<br>Source: NY State Dept. of Health SPARCS · Built by Rajashekar (Ak) Akula';
-      return;
     }
 
     // filters
@@ -380,7 +381,23 @@
 
     renderKPIs(); renderThresholdStats(); drawHist(); drawScatter(); renderSev(); renderPerf();
     renderCostMeta(); renderLosMeta();
-    runPredict();
+    if(STATIC_MODE) renderStaticPredictionDemo(); else runPredict();
+  }
+
+  function renderStaticPredictionDemo(){
+    const exampleInputs=['eAge','eAdm','eSev','eDrg','eDx','eMed','eZip','ePay2'];
+    exampleInputs.forEach(id=>$(id).disabled=true);
+    $('oLos').textContent='5.2';
+    $('oCost').textContent='$18,640';
+    const fp=$('oFlag'); fp.textContent='Standard'; fp.className='flag-pill lo';
+    $('baseCost').textContent='illustrative baseline $16,900';
+    const drivers=[['Severity of illness',2100],['APR-DRG group',1450],['Admission pathway',780],['Age profile',-620],['Payer profile',-430]];
+    const maxAbs=Math.max(...drivers.map(d=>Math.abs(d[1])));
+    $('shap').innerHTML=drivers.map(([label,value])=>{
+      const w=Math.abs(value)/maxAbs*46, cls=value>=0?'pos':'neg';
+      const txt=(value>=0?'+$':'−$')+Math.abs(value).toLocaleString();
+      return `<div class="shap-row"><span class="lab">${label}</span><div class="shap-bar-wrap"><div class="shap-mid"></div><div class="shap-bar ${cls}" style="width:${w}%"><span class="shap-val">${txt}</span></div></div></div>`;
+    }).join('');
   }
 
   function currentPayer(){ const p=$('fPay').value; return (p&&p!=='All payers')?p:(CFG.ui_options['Payment Typology 1']?.[0]||'Medicare'); }
@@ -511,7 +528,7 @@
       ['High-cost rate',hi+'%','≥ $40k','money'],
       ['Cost / LOS day',fmt(cpd),'blended','money']];
     $('kpis').innerHTML=cards.map(([k,v,d,cls])=>`<div class="kpi glass ${cls}"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join('');
-    if(CFG) runPredict();
+    if(CFG&&!STATIC_MODE) runPredict();
   }
 
   function renderCostMeta(){ const c=MET.cohort;
