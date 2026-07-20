@@ -1,8 +1,10 @@
 <div align="center">
 
-# Finger Lakes Inpatient Opportunity Analyzer
+# Finger Lakes Inpatient Planning & Opportunity Dashboard
 
 ### Case-mix-adjusted LOS and cost intelligence for hospital operations
+
+### [▶ Open the live dashboard](https://rajashekarakula19-spec.github.io/los-pjt/)
 
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.139-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -16,7 +18,7 @@ York SPARCS de-identified inpatient public-use file**. It compares observed LOS
 and total cost with case-mix-adjusted expectations, then ranks statistically
 supported facility and service-line areas for human investigation.
 
-[Quick start](#quick-start) · [Method](#analytical-approach) · [Results](#dataset-and-current-results) · [API](#api) · [Limitations](#known-limitations)
+[Live dashboard](https://rajashekarakula19-spec.github.io/los-pjt/) · [Quick start](#quick-start) · [Method](#analytical-approach) · [Results](#dataset-and-current-results) · [API](#api) · [Limitations](#known-limitations)
 
 </div>
 
