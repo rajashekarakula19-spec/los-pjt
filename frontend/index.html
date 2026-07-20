@@ -308,7 +308,7 @@
 
 <script>
 (function(){
-  const STATIC_MODE=location.hostname.endsWith('github.io')||new URLSearchParams(location.search).has('static');
+  const STATIC_MODE=location.hostname.endsWith('github.io')||location.hostname.endsWith('.hf.space')||new URLSearchParams(location.search).has('static');
   const API = "";  // same origin for the FastAPI edition
   const $=id=>document.getElementById(id);
   const fmt=n=>'$'+Math.round(n).toLocaleString();

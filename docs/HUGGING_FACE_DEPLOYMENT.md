@@ -1,23 +1,29 @@
-# Deploy the full application to Hugging Face Spaces
+# Deploy the dashboard to a free Hugging Face Static Space
 
-Hugging Face Spaces can run the FastAPI backend and experimental prediction
-sandbox on the free CPU Basic tier. The Space sleeps when unused and wakes when
-visited.
+Hugging Face currently offers Static Spaces free to all users. Docker and
+Gradio Spaces require a paid plan, so this deployment publishes the dashboard
+and its precomputed, de-identified analysis without running FastAPI.
+
+## What the free edition includes
+
+- Facility benchmarking and ranked opportunities
+- Case-mix-adjusted LOS and cost results
+- Confidence, robustness, and outlier-concentration metrics
+- De-identified historical examples and dashboard filters
+
+The experimental live prediction form is hidden because it requires a Python
+backend. The analysis remains usable because it reads committed aggregate JSON.
 
 ## 1. Create the Space
 
 1. Sign in at <https://huggingface.co/>.
 2. Open <https://huggingface.co/new-space>.
-3. Choose a Space name such as `los-opportunity-analyzer`.
+3. Choose a name such as `los-opportunity-analyzer`.
 4. Set visibility to **Public**.
-5. Select **Docker** as the SDK.
-6. Choose the free **CPU Basic** hardware.
-7. Create the Space.
+5. Select **Static** and the **Plain HTML** template.
+6. Create the Space.
 
-Hugging Face creates a small Space repository containing a `README.md`. Preserve
-that file because its YAML header configures the Docker runtime.
-
-The header should look like:
+The Space `README.md` should begin with metadata similar to:
 
 ```yaml
 ---
@@ -25,86 +31,65 @@ title: Finger Lakes Inpatient Opportunity Analyzer
 emoji: 🏥
 colorFrom: blue
 colorTo: green
-sdk: docker
-app_port: 7860
+sdk: static
+app_file: index.html
 pinned: false
 short_description: Case-mix-adjusted LOS and cost opportunity analysis
 ---
 ```
 
-## 2. Copy the application into the Space repository
+## 2. Publish the static files
 
-Run these commands from the directory that contains this project. Replace
-`YOUR_HF_USERNAME` with the username shown in the Hugging Face profile URL.
+From the directory containing this project, replace `YOUR_HF_USERNAME`:
 
 ```bash
 git clone https://huggingface.co/spaces/YOUR_HF_USERNAME/los-opportunity-analyzer hf-space
 
-cp -R los-pjt/backend hf-space/backend
-cp -R los-pjt/frontend hf-space/frontend
-cp los-pjt/Dockerfile hf-space/Dockerfile
+mkdir -p hf-space/data
+cp urmc-los-cost/frontend/index.html hf-space/index.html
+cp urmc-los-cost/backend/artifacts/config.json hf-space/data/config.json
+cp urmc-los-cost/backend/artifacts/metrics.json hf-space/data/metrics.json
 
 cd hf-space
-git add README.md Dockerfile backend frontend
-git commit -m "Deploy opportunity analyzer"
+git add README.md index.html data
+git commit -m "Deploy static opportunity dashboard"
 git push
 ```
 
-If the local project folder has a different name, replace `los-pjt` in the copy
-commands with its path.
+Replace `urmc-los-cost` if the local project folder has a different name.
 
 ## 3. Authentication
 
-When Git requests a password, use a Hugging Face **write access token**, not the
-account password:
+If Git requests a password, use a Hugging Face write token from
+<https://huggingface.co/settings/tokens>. Enter the Hugging Face username and
+use the token as the password. Never place a token in a command, remote URL,
+file, commit, screenshot, or chat.
 
-1. Open <https://huggingface.co/settings/tokens>.
-2. Create a fine-grained or write token that can modify the Space.
-3. Enter the Hugging Face username when Git asks for a username.
-4. Paste the token when Git asks for a password.
+## 4. Live URL
 
-Never put the token in a file, command, Git remote URL, commit, screenshot, or
-chat message. Revoke it from the token settings if it is accidentally exposed.
-
-## 4. Build and live URL
-
-Each push triggers a Docker rebuild. Follow the build logs from the Space page.
-After the status changes to **Running**, the public URLs are:
+After the Space finishes building:
 
 ```text
 Space page: https://huggingface.co/spaces/YOUR_HF_USERNAME/los-opportunity-analyzer
 Direct app: https://YOUR_HF_USERNAME-los-opportunity-analyzer.hf.space
 ```
 
-Hugging Face normalizes some characters in the direct-app subdomain. Use the
-link displayed by the Space page as the authoritative URL.
+Use the link shown on the Space page if Hugging Face normalizes it differently.
 
-## Why only selected files are copied
+## Updating later
 
-- The raw SPARCS CSV is not required and is not uploaded.
-- The trained `.joblib` artifacts and aggregate JSON are already in `backend/`.
-- The generated Space `README.md` retains the required Docker metadata.
-- GitHub workflows, Git history, local virtual environments, and tests are not
-  required in the runtime repository.
+Regenerate the project artifacts; copy `index.html`, `config.json`, and
+`metrics.json` into the Space again; then commit and push. Do not upload the raw
+SPARCS CSV because the static dashboard does not need it.
 
 ## Troubleshooting
 
-### Space shows a configuration error
+If the Space reports a configuration error, confirm its YAML header contains
+`sdk: static` and `app_file: index.html`. If the dashboard has no results,
+confirm the Space contains:
 
-Confirm that the Space `README.md` begins with `sdk: docker` and
-`app_port: 7860`.
-
-### Container starts but the page is unavailable
-
-Confirm that the Docker command binds to `0.0.0.0` on port `7860`. The supplied
-Dockerfile already does this.
-
-### Build is slow
-
-The first build installs pandas and scikit-learn and may take several minutes.
-Later builds can reuse cached layers when requirements do not change.
-
-### App sleeps
-
-Sleeping is expected on free CPU hardware. The first visit after inactivity can
-take extra time while the Space wakes.
+```text
+index.html
+data/config.json
+data/metrics.json
+```
