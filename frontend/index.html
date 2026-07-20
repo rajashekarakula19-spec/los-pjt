@@ -141,6 +141,28 @@
   footer{ margin-top:24px; padding-top:16px; border-top:1px solid var(--glass-line-soft);
     font-family:var(--mono); font-size:10.5px; color:#7C8D9A; letter-spacing:.03em; line-height:1.7; }
   .loading{ color:var(--muted); font-family:var(--mono); font-size:12px; }
+  .section-title{ margin:28px 0 12px; display:flex; justify-content:space-between; align-items:end; gap:16px; flex-wrap:wrap; }
+  .section-title h2{ font-size:18px; font-weight:620; }
+  .section-title p{ color:var(--muted-2); font-size:12.5px; max-width:70ch; }
+  .analysis-grid{ display:grid; grid-template-columns:1fr 1.3fr; gap:18px; }
+  @media(max-width:900px){ .analysis-grid{ grid-template-columns:1fr; } }
+  .table-wrap{ overflow:auto; max-height:520px; border-radius:12px; }
+  table{ width:100%; border-collapse:collapse; font-size:12px; }
+  th{ position:sticky; top:0; z-index:1; text-align:left; padding:9px 8px; background:#15283a; color:var(--muted); font-family:var(--mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase; }
+  td{ padding:9px 8px; border-top:1px solid var(--glass-line-soft); color:var(--muted-2); vertical-align:top; }
+  tr.clickable{ cursor:pointer; }
+  tr.clickable:hover, tr.selected{ background:rgba(95,227,220,.08); }
+  .delta-pos{ color:var(--s-extreme); font-family:var(--mono); }
+  .delta-neg{ color:var(--cyan); font-family:var(--mono); }
+  .signal{ display:inline-block; border-radius:999px; padding:2px 7px; font-family:var(--mono); font-size:9px; text-transform:uppercase; }
+  .signal.high{ color:#FFD9D2; background:rgba(240,115,106,.18); }
+  .signal.normal{ color:#D2F5E2; background:rgba(99,214,156,.14); }
+  .signal.broad{ color:#D2F5E2; background:rgba(99,214,156,.14); }
+  .signal.mixed{ color:#FFF0C9; background:rgba(242,197,107,.16); }
+  .signal.outlier{ color:#FFD9D2; background:rgba(240,115,106,.18); }
+  .method-note{ margin-top:12px; padding:11px 13px; border-left:3px solid var(--cyan); background:rgba(95,227,220,.06); color:var(--muted-2); font-size:11.5px; }
+  .case-empty{ color:var(--muted); font-size:12px; padding:14px 0; }
+  .card-help{ color:var(--muted); font-size:11.5px; line-height:1.5; margin:-7px 0 14px; max-width:78ch; }
   @media (prefers-reduced-motion:reduce){ *{ transition:none !important; animation:none !important; } }
   :focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
 </style>
@@ -157,6 +179,44 @@
       </div>
       <span class="badge"><span class="dot"></span>Live model · real SPARCS data</span>
     </header>
+
+    <div class="section-title">
+      <div><h2>Case-mix opportunity overview</h2><p>Observed utilization compared with separate out-of-fold expectations within newborn, maternity, pediatric, emergency-medical, elective-surgical, and other service lines. Positive gaps are investigation signals—not proven waste or guaranteed savings.</p></div>
+      <div class="fltr"><label>Facility view</label><select id="oFacility"><option value="">All facilities</option></select></div>
+    </div>
+    <div class="kpis" id="oppKpis"></div>
+
+    <div class="analysis-grid">
+      <div class="card glass">
+        <h2>Facility comparison</h2>
+        <p class="card-help">Compares each facility’s observed results with the case-mix expectation. A positive gap means more LOS or cost than expected for clinically similar discharges.</p>
+        <div class="table-wrap"><table><thead><tr><th>Facility</th><th>Cases</th><th>LOS gap</th><th>Net bed-days</th><th>Cost gap</th></tr></thead><tbody id="facilityRows"></tbody></table></div>
+      </div>
+      <div class="card glass money">
+        <h2>Ranked investigation opportunities</h2>
+        <p class="card-help">Ranks high-volume groups after false-discovery-rate correction across all tested comparisons. <b>A = Actual</b> and <b>E = Expected</b>. Robust gap excludes the extreme 1% at each end; Top-10% share shows how much positive cost difference comes from the largest 10% of cases.</p>
+        <div class="table-wrap"><table><thead><tr><th>Area</th><th>Cases</th><th>LOS A / E</th><th>Cost A / E</th><th>Robustness</th></tr></thead><tbody id="opportunityRows"></tbody></table></div>
+        <div class="method-note" id="oppMethod"></div>
+      </div>
+    </div>
+
+    <div class="card glass" style="margin-top:18px">
+      <h2>Historical cases behind selected opportunity</h2>
+      <p class="card-help">Shows de-identified examples with the largest positive cost differences inside the selected group. Use them to guide investigation, not to infer cause or judge individual care.</p>
+      <div id="caseContext" class="case-empty">Select an opportunity above to inspect de-identified historical examples.</div>
+      <div class="table-wrap"><table><thead><tr><th>Facility / condition</th><th>Profile</th><th>LOS actual / expected</th><th>Cost actual / expected</th></tr></thead><tbody id="caseRows"></tbody></table></div>
+    </div>
+
+    <div class="card glass" style="margin-top:18px">
+      <h2>Opportunity benchmark validation</h2>
+      <p class="card-help">These values describe the out-of-fold case-mix benchmark used for group comparisons. Individual error remains substantial; reliability comes from adequate group volume, uncertainty intervals, and calibrated aggregate totals.</p>
+      <div class="perf" id="benchmarkValidation"></div>
+      <div class="metric-inline" id="serviceLineSummary"></div>
+      <div class="method-note"><b>Feature decision:</b> Procedure, disposition, charges, and other post-admission fields are intentionally excluded even if they improve apparent accuracy. Including them would leak treatment or outcome information and could hide operational differences. APR-DRG already captures newborn birth-weight bands, so raw birth weight adds little general value.</div>
+      <div class="method-note"><b>Cluster audit:</b> Unsupervised clinical clustering found only a weak two-group separation (silhouette 0.194), largely emergency medical versus maternity/newborn/elective care. The tool therefore uses transparent service lines instead of opaque cluster labels.</div>
+    </div>
+
+    <div class="section-title"><div><h2>Experimental prediction sandbox</h2><p>Individual estimates are retained for model exploration. They should not be used alone for clinical, discharge, billing, or resource-allocation decisions.</p></div></div>
 
     <div class="filters glass">
       <div class="fltr locked"><label>Health Service Area</label><select disabled><option>Finger Lakes</option></select></div>
@@ -178,6 +238,10 @@
             <div class="fltr"><label>Admission type</label><select id="eAdm"></select></div>
             <div class="fltr"><label>Severity of illness</label><select id="eSev"></select></div>
             <div class="fltr"><label>Condition (APR-DRG)</label><select id="eDrg"></select></div>
+            <div class="fltr"><label>Diagnosis (CCSR)</label><select id="eDx"></select></div>
+            <div class="fltr"><label>Medical / surgical</label><select id="eMed"></select></div>
+            <div class="fltr"><label>ZIP code</label><select id="eZip"></select></div>
+            <div class="fltr"><label>Secondary payer</label><select id="ePay2"></select></div>
           </div>
           <div class="est-out">
             <div class="est-box los"><div class="k">Predicted LOS</div><div class="v" id="oLos">—</div><div class="u">days</div></div>
@@ -221,11 +285,12 @@
     </div>
 
     <div class="card glass" style="margin-top:18px">
-      <h2>Model performance &amp; method</h2>
+      <h2>Experimental individual prediction performance</h2>
+      <p class="card-help">These held-out metrics apply only to the secondary patient-level prediction sandbox. Accuracy is limited: do not use its estimates or high-cost flag alone for clinical, discharge, billing, staffing, or resource-allocation decisions.</p>
       <div class="perf" id="perf"></div>
       <div class="how">
-        <div class="how-item"><div class="n">01</div><div class="t">SPARCS ingestion</div><div class="d">140K Finger Lakes discharges cleaned; LOS and cost parsed; rare DRGs grouped.</div></div>
-        <div class="how-item"><div class="n">02</div><div class="t">Admission-time features</div><div class="d">Only fields known at admission — age, admission type, severity, DRG, payer, facility — no discharge leakage.</div></div>
+        <div class="how-item"><div class="n">01</div><div class="t">SPARCS ingestion</div><div class="d">140K Finger Lakes discharges cleaned; LOS and cost parsed; rare DRGs and diagnoses grouped.</div></div>
+        <div class="how-item"><div class="n">02</div><div class="t">Experimental predictors</div><div class="d">Uses coded demographic, diagnosis, severity, DRG, payer, and facility fields. Availability at admission must be confirmed before prospective use.</div></div>
         <div class="how-item"><div class="n">03</div><div class="t">Gradient boosting</div><div class="d">Two HistGradientBoosting regressors: length of stay and cost of care.</div></div>
         <div class="how-item"><div class="n">04</div><div class="t">Driver attribution</div><div class="d">Per-admission cost drivers via feature ablation — the "why" behind each estimate.</div></div>
       </div>
@@ -260,6 +325,16 @@
     $('metaRow').innerHTML=[['DATA','NY SPARCS 2024'],['REGION','Finger Lakes'],['DISCHARGES',c.n.toLocaleString()],['MODEL','Gradient Boosting']]
       .map(([k,v])=>`<span class="meta">${k} · <b>${v}</b></span>`).join('');
 
+    // primary case-mix opportunity tool
+    if(MET.opportunity){
+      MET.opportunity.facilities.forEach(r=>$('oFacility').appendChild(opt(r['Facility Name'],titleCase(r['Facility Name']))));
+      $('oFacility').addEventListener('change',renderOpportunity);
+      renderOpportunity();
+      renderBenchmarkValidation();
+    }else{
+      $('oppMethod').textContent='Retrain the project to generate the opportunity-analysis artifact.';
+    }
+
     // filters
     const fFac=$('fFac'); fFac.appendChild(opt('All facilities'));
     CFG.facilities.forEach(f=>fFac.appendChild(opt(f,titleCase(f))));
@@ -275,12 +350,16 @@
     CFG.ui_options['Type of Admission'].forEach(a=>$('eAdm').appendChild(opt(a)));
     ['Minor','Moderate','Major','Extreme'].forEach(s=>$('eSev').appendChild(opt(s)));
     CFG.ui_options['APR DRG Description'].forEach(d=>$('eDrg').appendChild(opt(d,titleCase(pretty(d)))));
+    CFG.ui_options['CCSR Diagnosis Code'].forEach(d=>$('eDx').appendChild(opt(d)));
+    CFG.ui_options['APR Medical Surgical Description'].forEach(m=>$('eMed').appendChild(opt(m)));
+    CFG.ui_options['Zip Code'].forEach(z=>$('eZip').appendChild(opt(z)));
+    CFG.ui_options['Payment Typology 2'].forEach(p=>$('ePay2').appendChild(opt(p)));
     // sensible defaults
     $('eSev').value='Moderate';
 
     // payer for estimator uses filter's first real payer as default via config
     // wire events
-    ['eAge','eAdm','eSev','eDrg'].forEach(id=>$(id).addEventListener('change',runPredict));
+    ['eAge','eAdm','eSev','eDrg','eDx','eMed','eZip','ePay2'].forEach(id=>$(id).addEventListener('change',runPredict));
     ['fFac','fDrg','fPay','fAdm'].forEach(id=>$(id).addEventListener('change',renderKPIs));
     $('reset').addEventListener('click',()=>{['fFac','fDrg','fPay','fAdm'].forEach(id=>$(id).selectedIndex=0);renderKPIs();});
     $('thresh').addEventListener('input',onThreshold);
@@ -292,9 +371,80 @@
 
   function currentPayer(){ const p=$('fPay').value; return (p&&p!=='All payers')?p:(CFG.ui_options['Payment Typology 1']?.[0]||'Medicare'); }
 
+  function delta(v, money=false){
+    const cls=v>0?'delta-pos':'delta-neg', sign=v>0?'+':'';
+    return `<span class="${cls}">${sign}${money?fmt(v):Number(v).toLocaleString()}</span>`;
+  }
+
+  function opportunityArea(r){
+    if(r['APR DRG Description']) return `DRG · ${titleCase(r['APR DRG Description'])}`;
+    if(r['Service Line']) return `Service line · ${titleCase(r['Service Line'])}`;
+    return `Admission · ${titleCase(r['Type of Admission'])}`;
+  }
+
+  function renderOpportunity(){
+    const a=MET.opportunity; if(!a)return;
+    const selected=$('oFacility').value;
+    const facilities=selected?a.facilities.filter(r=>r['Facility Name']===selected):a.facilities;
+    const indexed=a.opportunities.map((r,i)=>({r,i})).filter(x=>!selected||x.r['Facility Name']===selected);
+    const e=a.executive, v=a.validation;
+    const cards=[
+      ['Discharges',e.discharges.toLocaleString(),'benchmark cohort','model'],
+      ['Actual bed-days',e.actual_bed_days.toLocaleString(),'completed stays','model'],
+      ['Positive facility gap',e.positive_facility_bed_day_gap.toLocaleString(),'net bed-days for review','money'],
+      ['Positive cost gap',fmt(e.positive_facility_cost_gap),'not guaranteed savings','money'],
+      ['Review areas',indexed.length.toLocaleString(),'ranked, ≥100 cases','money']];
+    $('oppKpis').innerHTML=cards.map(([k,val,d,cls])=>`<div class="kpi glass ${cls}"><div class="k">${k}</div><div class="v">${val}</div><div class="d">${d}</div></div>`).join('');
+    $('facilityRows').innerHTML=facilities.map(r=>`<tr class="clickable" data-facility="${r['Facility Name']}">
+      <td>${titleCase(r['Facility Name'])}<br><span class="signal ${(r.statistically_higher&&r.fdr_significant)?'high':'normal'}">${(r.statistically_higher&&r.fdr_significant)?'review':'within range'}</span></td>
+      <td>${r.n.toLocaleString()}</td><td>${delta(r.los_difference)} d</td><td>${delta(r.net_bed_days)}</td><td>${delta(r.net_cost_difference,true)}</td></tr>`).join('');
+    document.querySelectorAll('#facilityRows tr').forEach(tr=>tr.addEventListener('click',()=>{$('oFacility').value=tr.dataset.facility;renderOpportunity();}));
+    $('opportunityRows').innerHTML=indexed.slice(0,20).map(({r,i})=>{
+      const area=opportunityArea(r);
+      const patternClass=r.signal_pattern==='broad-based'?'broad':r.signal_pattern==='mixed'?'mixed':'outlier';
+      return `<tr class="clickable" data-opportunity="${i}"><td>${titleCase(r['Facility Name'])}<br><b>${pretty(area)}</b></td>
+        <td>${r.n.toLocaleString()}</td><td>${r.actual_los.toFixed(1)} / ${r.expected_los.toFixed(1)}<br>${delta(r.los_difference)} d</td>
+        <td>${fmt(r.actual_cost)} / ${fmt(r.expected_cost)}<br>${delta(r.cost_difference,true)}</td>
+        <td>robust ${delta(r.robust_net_cost_difference,true)}<br>top 10%: ${Math.round(r.top_10_positive_cost_share*100)}% · q ${r.q_value.toFixed(3)}<br><span class="signal ${patternClass}">${r.signal_pattern}</span></td></tr>`}).join('');
+    const opportunityRows=[...document.querySelectorAll('#opportunityRows tr')];
+    opportunityRows.forEach(tr=>tr.addEventListener('click',()=>renderCases(Number(tr.dataset.opportunity),tr)));
+    $('oppMethod').textContent=`${a.method.name}: separate ${a.method.folds}-fold service-line models, 95% intervals, minimum ${a.method.minimum_group_cases} cases, ${a.method.multiple_comparison_control}. OOF validation: LOS MAE ${v.los_mae} days; cost MAE ${fmt(v.cost_mae)}. ${a.method.interpretation}`;
+    $('caseRows').innerHTML='';
+    $('caseContext').textContent=indexed.length?'Loading examples for the highest-ranked displayed opportunity…':'No statistically supported opportunities match this facility.';
+    if(opportunityRows.length) renderCases(Number(opportunityRows[0].dataset.opportunity),opportunityRows[0]);
+  }
+
+  function renderBenchmarkValidation(){
+    const a=MET.opportunity, v=a.validation, m=a.method;
+    $('benchmarkValidation').innerHTML=`
+      <div class="perf-block"><div class="t">Out-of-fold design</div><div class="perf-metrics">
+        <div class="pm"><div class="v" style="color:var(--cyan)">${a.executive.discharges.toLocaleString()}</div><div class="k">OOF records</div></div>
+        <div class="pm"><div class="v" style="color:var(--cyan)">${m.folds}</div><div class="k">folds</div></div>
+        <div class="pm"><div class="v" style="color:var(--cyan)">${m.minimum_group_cases}</div><div class="k">minimum cases</div></div></div></div>
+      <div class="perf-block"><div class="t">Benchmark limitations</div><div class="perf-metrics">
+        <div class="pm"><div class="v" style="color:var(--gold)">${v.los_mae}</div><div class="k">LOS MAE (days)</div></div>
+        <div class="pm"><div class="v" style="color:var(--gold)">${fmt(v.cost_mae)}</div><div class="k">cost MAE</div></div>
+        <div class="pm"><div class="v" style="color:var(--gold)">95%</div><div class="k">group intervals</div></div></div></div>`;
+    $('serviceLineSummary').innerHTML=Object.entries(m.service_line_models)
+      .map(([line,n])=>`<span class="mi">${line} <b>${n.toLocaleString()}</b></span>`).join('');
+  }
+
+  function renderCases(id,rowEl){
+    const a=MET.opportunity, item=a.opportunities[id];
+    document.querySelectorAll('#opportunityRows tr').forEach(r=>r.classList.remove('selected'));
+    if(rowEl)rowEl.classList.add('selected');
+    const cases=a.case_samples.filter(r=>r.opportunity_id===id);
+    const area=opportunityArea(item);
+    $('caseContext').textContent=`${titleCase(item['Facility Name'])} · ${area} · ${item.n.toLocaleString()} discharges · ${item.signal_pattern} signal. Examples are selected by largest positive cost residual and are not causal evidence.`;
+    $('caseRows').innerHTML=cases.length?cases.map(r=>`<tr><td>${titleCase(r.facility)}<br>${titleCase(pretty(r.drg))}</td>
+      <td>${r.age} · ${r.severity}<br>${r.admission}</td><td>${r.actual_los.toFixed(1)} / ${r.expected_los.toFixed(1)}</td>
+      <td>${fmt(r.actual_cost)} / ${fmt(r.expected_cost)}</td></tr>`).join(''):`<tr><td colspan="4" class="case-empty">No saved examples are available for this opportunity. Retrain the artifacts to generate them.</td></tr>`;
+  }
+
   async function runPredict(){
     const body={ age:$('eAge').value, admission:$('eAdm').value, severity:$('eSev').value,
       drg:$('eDrg').value, payer:currentPayer(),
+      diagnosis:$('eDx').value, med_surg:$('eMed').value, zip_code:$('eZip').value, payer2:$('ePay2').value,
       facility:$('fFac').value, threshold:parseInt($('thresh').value,10) };
     let r; try{ r=await (await fetch(API+'/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json(); }
     catch(e){ return; }
@@ -397,11 +547,11 @@
   function renderPerf(){
     const l=MET.los, co=MET.cost, h=MET.high_cost;
     $('perf').innerHTML=`
-      <div class="perf-block"><div class="t">LOS regression</div><div class="perf-metrics">
+      <div class="perf-block"><div class="t">LOS regression · limited individual accuracy</div><div class="perf-metrics">
         <div class="pm"><div class="v" style="color:var(--cyan)">${l.mae}</div><div class="k">MAE (days)</div></div>
         <div class="pm"><div class="v" style="color:var(--cyan)">${l.r2}</div><div class="k">R²</div></div>
         <div class="pm"><div class="v" style="color:var(--cyan)">${l.rmse}</div><div class="k">RMSE</div></div></div></div>
-      <div class="perf-block"><div class="t">Cost regression &amp; high-cost flag</div><div class="perf-metrics">
+      <div class="perf-block"><div class="t">Cost / flag · misses ${Math.round((1-h.recall)*100)}% of high-cost cases</div><div class="perf-metrics">
         <div class="pm"><div class="v" style="color:var(--gold)">${co.r2}</div><div class="k">Cost R²</div></div>
         <div class="pm"><div class="v" style="color:var(--gold)">${h.recall}</div><div class="k">Recall</div></div>
         <div class="pm"><div class="v" style="color:var(--gold)">${h.precision}</div><div class="k">Precision</div></div></div></div>`;
