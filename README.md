@@ -353,6 +353,12 @@ docker run --rm -p 7860:7860 los-opportunity-analyzer
 
 Open <http://127.0.0.1:7860>.
 
+### Deploy the full application on Hugging Face Spaces
+
+The Docker image is compatible with the free Hugging Face CPU Basic tier. See
+[Hugging Face deployment](docs/HUGGING_FACE_DEPLOYMENT.md) for the safe setup,
+Space metadata, Git commands, and troubleshooting guidance.
+
 ## Interpretation guidance
 
 <details open>

@@ -4,9 +4,12 @@ WORKDIR /app
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY backend/ ./backend/
-COPY frontend/ ./frontend/
+RUN useradd --create-home --uid 1000 appuser
+
+COPY --chown=appuser:appuser backend/ ./backend/
+COPY --chown=appuser:appuser frontend/ ./frontend/
 
 WORKDIR /app/backend
+USER appuser
 EXPOSE 7860
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
